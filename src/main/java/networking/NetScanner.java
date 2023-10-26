@@ -1,22 +1,47 @@
 package networking;
 
-import java.util.*;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Scanner;
 
 public class NetScanner {
-    public List<String> getIPAddresses() throws SocketException {
-        List<String> ipAddresses = new ArrayList<>();
-        Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-        while (interfaces.hasMoreElements()) {
-            NetworkInterface iface = interfaces.nextElement();
-            Enumeration<InetAddress> addresses = iface.getInetAddresses();
-            while (addresses.hasMoreElements()) {
-                InetAddress addr = addresses.nextElement();
-                if (addr instanceof Inet4Address && !addr.isLoopbackAddress()) {
-                    ipAddresses.add(addr.getHostAddress());
-                }
-            }
+    private Scanner scanner;
+    private InetAddress localhost;
+
+    public NetScanner() {
+        this.scanner = new Scanner(System.in);
+        try {
+            this.localhost = InetAddress.getLocalHost();
+        } catch (UnknownHostException ex) {
+            System.out.println("no localhost found.");
         }
-        return ipAddresses;
+    }
+
+    public void scanNetwork() {
+        System.out.println("Escribe 'netscan -a' para escanear la red:");
+        String command = scanner.nextLine();
+
+        if (command.equals("netscan -a")) {
+            try {
+                byte[] ip = localhost.getAddress();
+
+                for (int i = 1; i <= 254; i++) {
+                    ip[3] = (byte) i;
+                    InetAddress address = InetAddress.getByAddress(ip);
+                    if (address.isReachable(1000)) {
+                        System.out.println(address + " está en la red");
+                    }
+                }
+            } catch (Exception ex) {
+                System.out.println("Ocurrió un error: " + ex.getMessage());
+            }
+        } else {
+            System.out.println("Comando desconocido");
+        }
+    }
+
+    public static void main(String[] args) {
+        NetScanner netScanner = new NetScanner();
+        netScanner.scanNetwork();
     }
 }
